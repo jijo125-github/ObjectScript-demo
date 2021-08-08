@@ -1,0 +1,197 @@
+ROUTINE mac
+ems; Employee Management System MUMPS format
+
+	Write !,?30,"1.Add Employee"
+	Write !,?30,"2.View Employee"
+	Write !,?30,"3.Edit Employee"
+	Write !,?30,"4.Search Employee"
+	Write !,?30,"5.Quit",!
+	Read !!,?30,"Enter choice: ",choice
+	Do $CASE(choice,1:EmployeeAdd,2:EmployeeView,3:EmployeeEdit,4:EmployeeSearch,:Quit)
+	Quit
+	
+EmployeeAdd()
+	Set subscript1=""
+	Set globalcount=0
+	For  Do  Quit:subscript1=""
+	.Set subscript1=$ORDER(^EMS(subscript1)) Quit:subscript1=""
+	.Set globalcount=$INCREMENT(globalcount)
+	Set empid=$INCREMENT(globalcount)
+	Do timeset
+	Do adddetails
+	Set ^EMS(empid)=empid_"^"_name_"^"_desig_"^"_gender_"^"_dob_"^"_city_"^"_doj_"^"_country_"^"_emailid
+	Quit
+
+adddetails()
+	Write !,"Enter details of the employee to be added:",!
+	Write !,"EmployeeId: ",empid
+	Read !,"Enter name: ",name Set name=$$isnamepresent(name) Set name=$ZCONVERT(name,"U")
+	Read !,"Enter designation: ",desig#30 Set desig=$ZCONVERT(desig,"U")
+	Read !,"Enter gender(M or F): ",gender#1 Set gender=$$isgendercorrect(gender) 
+	Read !,"Enter DOB (dd/mm/yyyy): ",dob Set dob=$$isdatecorrect(dob) 
+	Read !,"Enter city: ",city#25 Set city=$ZCONVERT(city,"U")
+	Read !,"Enter Date Of Joining: ",doj Set doj=$$isdatecorrect(doj) 
+	Read !,"Enter country: ",country#25 Set country=$ZCONVERT(country,"U")
+	Read !,"Enter emailid: ",emailid Set emailid=$$isemailcorrect(emailid)
+	Quit
+
+EmployeeView()
+	Read !,"Enter the employee id: ",id
+	Write !,"Details of the employee: ",!
+	Write !,"Employee Id: ",$PIECE(^EMS(id),"^",1)
+	Write !,"Name of the employee: ",$PIECE(^EMS(id),"^",2)
+	Write !,"Designation of the employee: ",$PIECE(^EMS(id),"^",3)
+	Write !,"Gender of the employee: ",$PIECE(^EMS(id),"^",4)
+	Write !,"Date Of Birth : ",$PIECE(^EMS(id),"^",5)
+	Write !,"Employee city: ",$PIECE(^EMS(id),"^",6)
+	Write !,"Date Of Joining: ",$PIECE(^EMS(id),"^",7)
+	Write !,"Employee country: ",$PIECE(^EMS(id),"^",8)
+	Write !,"Employee emailid: ",$PIECE(^EMS(id),"^",9),!
+	Quit
+
+EmployeeEdit()
+	Read !,"Enter the ID of the employee u want to edit: ",empid
+	Read !,"Want to edit every fields (Y/N)",ans#1
+	If ans="Y" Do
+	.Do adddetails 
+	.Do seteditedfields	
+	Else  Do
+	.Do edit(empid)
+	Quit
+
+edit(id)
+	Write !,"Which field you want to edit???",!
+	Write !,"1.Name",!,"2.Designation",!,"3.Gender",!,"4.Date of Birth",!,"5.City",!,"6.Date of Joining",!,"7.Country",!,"8.EmailId"
+	Read !!,"field number: ",field#1
+	If field?1N Do $CASE(field,1:nameedit(id),2:desigedit(id),3:genderedit(id),4:dobedit(id),5:cityedit(id),6:dojedit(id),7:countryedit(id),8:emailedit(id))
+	Quit
+
+seteditedfields();	
+	Set $PIECE(^EMS(id),"^",2)=name
+	Set $PIECE(^EMS(id),"^",3)=desig
+	Set $PIECE(^EMS(id),"^",4)=gender
+	Set $PIECE(^EMS(id),"^",5)=dob
+	Set $PIECE(^EMS(id),"^",6)=city
+	Set $PIECE(^EMS(id),"^",7)=doj
+	Set $PIECE(^EMS(id),"^",8)=country
+	Set $PIECE(^EMS(id),"^",9)=emailid
+	Quit
+
+EmployeeSearch()
+	Read !,"Enter the Employee name: ",empsearch,!
+	Set flag=0
+	Set empsearch=$ZCONVERT(empsearch,"U")
+	Set subscript1="" 
+	For  Do  Quit:subscript1=""
+	.Set subscript1=$ORDER(^EMS(subscript1)) Quit:subscript1=""
+	.Set empname=$ZCONVERT($PIECE(^EMS(subscript1),"^",2),"U")
+	.If empname=empsearch Do
+	..Set flag=1
+	..Write !,"Employee Id: ",$PIECE(^EMS(subscript1),"^",1)
+	..Write !,"Name of the employee: ",$PIECE(^EMS(subscript1),"^",2)
+	..Write !,"Designation of the employee: ",$PIECE(^EMS(subscript1),"^",3)
+	..Write !,"Employee Gender: ",$PIECE(^EMS(subscript1),"^",4)
+	..Write !,"Employee DOB: ",$PIECE(^EMS(subscript1),"^",5)
+	..Write !,"Employee city: ",$PIECE(^EMS(subscript1),"^",6)
+	..Write !,"Employee DOJ: ",$PIECE(^EMS(subscript1),"^",7)
+	..Write !,"Employee country: ",$PIECE(^EMS(subscript1),"^",8)
+	..Write !,"Employee emailid: ",$PIECE(^EMS(subscript1),"^",9)
+	..Quit
+	
+	If flag'=1 Do	
+	.Write !,"Employee not found"	
+	Quit
+	  
+isgendercorrect(gender)
+	If (gender'?1(1"M",1"F")) Do
+	.Write !,"Enter correctly!!!!"
+	.Read !,"Enter gender(M or F): ",gender#1
+	.Do isgendercorrect(gender)
+	Quit gender
+
+isemailcorrect(email) 
+	Set match=email?1.l.1".".l.n.".".nl1"@"5.6l1"."2.3l    
+	If match'=1 
+	.Write !,"Invalid Email!!!!"
+	.Read !,"Enter emailid: ",email
+	.Do isemailcorrect(email)
+	Quit email
+	
+isnamepresent(name)
+	If name?1.A
+	.Write !,"Name is mandatory!!!!"
+	.Read !,"Enter name: ",name
+	.Do isnamepresent(name)
+	Quit name
+
+isdatecorrect(date)
+	If (date'?1.2N1"/"1.2N1"/"4N) 
+	{ 
+		Write !,"Invalid Date!!!!"
+		Read !,"Enter date correctly: ",date
+		Quit $$isdatecorrect(date)	
+	}
+	Quit $$datevalid(date)
+
+datevalid(date)
+	Set days=$PIECE(date,"/",1)
+	Set month=$PIECE(date,"/",2)
+	Set year=$PIECE(date,"/",3)
+	
+	If ((year<1900)||(year>curyear)||(month>12)||(month<1)||(days>31))
+	{
+		Write !,"Invalid Date!!!! "
+		Read !,"Enter date correctly: ",date
+		Quit $$isdatecorrect(date)	
+	}
+	Quit date
+
+timeset
+	Set current=$ZDATE($NOW())
+	Set curmonth=$PIECE(current,"/",1)
+	Set curday=$PIECE(current,"/",2)
+	Set curyear=$PIECE(current,"/",3)
+	Quit
+	
+nameedit(id)
+	Read !,"Enter name: ",name Set name=$$isnamepresent(name) Set name=$ZCONVERT(name,"U")
+	Set $PIECE(^EMS(id),"^",2)=name
+	Quit
+
+desigedit(id)
+	Read !,"Enter designation: ",desig#30 Set desig=$ZCONVERT(desig,"U")
+	Set $PIECE(^EMS(id),"^",3)=desig
+	Quit
+	
+genderedit(id)
+	Read !,"Enter gender(M or F): ",gender#1 Set gender=$$isgendercorrect(gender)
+	Set $PIECE(^EMS(id),"^",4)=gender
+	Quit
+
+dobedit(id)
+	Read !,"Enter DOB (dd/mm/yyyy): ",dob Set dob=$$isdatecorrect(dob)
+	Set $PIECE(^EMS(id),"^",5)=dob
+	Quit
+
+cityedit(id)
+	Read !,"Enter city: ",city#25 Set city=$ZCONVERT(city,"U")
+	Set $PIECE(^EMS(id),"^",6)=city
+	Quit
+
+dojedit(id)
+	Read !,"Enter Date Of Joining: ",doj Set doj=$$isdatecorrect(doj) 
+	Set $PIECE(^EMS(id),"^",7)=doj
+	Quit
+
+countryedit(id)
+	Read !,"Enter country: ",country#25 Set country=$ZCONVERT(country,"U")
+	Set $PIECE(^EMS(id),"^",8)=country
+	Quit
+
+emailedit(id)
+	Read !,"Enter emailid: ",emailid Set emailid=$$isemailcorrect(emailid)
+	Set $PIECE(^EMS(id),"^",9)=emailid
+	Quit
+	
+Quit()
+	Quit
